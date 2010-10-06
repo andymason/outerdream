@@ -1,5 +1,5 @@
 /*
-    Title:      Outer Dream
+    Title:      Outer Dream JavaScript
     Author:     Andrew Mason
     Contact:    a.w.mason@gmail.com
     URL:        http://coderonfire.com/
@@ -53,19 +53,29 @@ var outerdream = (function() {
                 } else {
                     colour = 0;
                 }
-
-                for (var t = 0; t < tileSize; t++) {
-                    buffer = paintTile(buffer, r, c);
-                }
+                buffer = paintTile(buffer, r, c);
             }
         }
         
         function paintTile(buffer, row, column) {
-            var pixelPosition = (row * (tileRows * 4)) + (column * 4);
-            buffer.data[pixelPosition] = colour;        // Red
-            buffer.data[pixelPosition + 1] = colour;    // Green
-            buffer.data[pixelPosition + 2] = colour;    // Blue
-            buffer.data[pixelPosition + 3] = 255;       // Alpha
+            /*
+            for (var x = 0; x < tileSize; x++) {
+                for (var y = 0; y < tileSize; y++) {
+                    buffer.data[pixelPosition + 3] = 255;       // Alpha    
+                }
+            }
+            */
+            for (var x = 0; x < tileSize; x++) {
+                 for (var y = 0; y < tileSize; y++) {
+                    var pixRow = 0;
+                 
+                    var pixelPosition = (row * (tileRows * 4 * y*16)) + (column * 4) + (x*4);
+                    buffer.data[pixelPosition] = colour;        // Red
+                    buffer.data[pixelPosition + 1] = colour;    // Green
+                    buffer.data[pixelPosition + 2] = colour;    // Blue
+                    buffer.data[pixelPosition + 3] = 255;       // Alpha
+                }
+            }
             return buffer;
         }
 

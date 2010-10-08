@@ -28,60 +28,82 @@ var outerdream = (function() {
     var tileRows = 20;
     var tileColumns = 30;
     var fps = 30;
+	var spriteTilesSrc = 'images/spites.png';
 
     var init = function() {
+		// Create main game canvas
         canvas = document.getElementById('gameCanvas');
         context = this.canvas.getContext('2d');
         width = this.canvas.width;
         height = this.canvas.height;
-
-        draw();
+		spriteTiles = new Image();
+		spriteTiles.src = spriteTilesSrc;
+		
+		// Wait till image has finished loading
+		spriteTiles.onload = function() {
+			context.drawImage(spriteTiles, 0, 0); // Strange performance boost by doing this!?
+			draw();
+		}
+		
+		// Handle key events
+		document.onkeydown = handleKeyDown;
+		document.onkeyup = handleKeyUp;
+        
     };
 
     var draw = function() {
+		console.time('drawing canvas');
         // Create empty buffer to use
         var buffer = context.createImageData(width, height);
         var colour = 0;
         var pixelXPosition = 0;
         var pixelYPosition = 0;
+		var tile = [];
 
         // Loop through each tile position
-        for (var r = 0; r < tileRows; r++) {
-            for (var c = 0; c < tileColumns; c++) {
-                if (tileMap[r][c] == 1) {
+        for (var row = 0; row < tileRows; row++) {
+            for (var col = 0; col < tileColumns; col++) {
+                // Choose tile based on tilemap value
+				if (tileMap[row][col] == 1) {
                     colour = 255;
+					tile = [21, 33];
                 } else {
                     colour = 0;
+					tile = [0, 0]
                 }
-                buffer = paintTile(buffer, r, c);
+				// Draw tile to the context
+				context.drawImage(spriteTiles, tile[0], tile[1], 16, 16, col*16, row*16, 16, 16);
             }
-        }
-        
-        function paintTile(buffer, row, column) {
-            /*
-            for (var x = 0; x < tileSize; x++) {
-                for (var y = 0; y < tileSize; y++) {
-                    buffer.data[pixelPosition + 3] = 255;       // Alpha    
-                }
-            }
-            */
-            for (var x = 0; x < tileSize; x++) {
-                 for (var y = 0; y < tileSize; y++) {
-                    var pixRow = 0;
-                 
-                    var pixelPosition = (row * (tileRows * 4 * y*16)) + (column * 4) + (x*4);
-                    buffer.data[pixelPosition] = colour;        // Red
-                    buffer.data[pixelPosition + 1] = colour;    // Green
-                    buffer.data[pixelPosition + 2] = colour;    // Blue
-                    buffer.data[pixelPosition + 3] = 255;       // Alpha
-                }
-            }
-            return buffer;
         }
 
-        // Draw the buffer image onto the canvas
-        context.putImageData(buffer, 0, 0);
+		console.timeEnd('drawing canvas');
     };
+	
+	var handleKeyDown = function(event) {
+		// Detect what key was pressed (support wasd & arrows)
+		switch(event.keyCode) {
+			case 37:
+			case 65:
+				console.log('left');
+				break;
+			case 38:
+			case 87:
+				console.log('up');
+				break;
+			case 39:
+			case 68:
+				console.log('right');
+				break
+			case 40:
+			case 83:
+				console.log('down');
+				break;
+		}
+	};
+	
+	var handleKeyUp = function(event) {
+
+	};
 
     var tileMap = [
         [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
@@ -89,24 +111,25 @@ var outerdream = (function() {
         [0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0],
         [0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0],
         [0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0],
-        [0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0],
-        [0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0],
-        [0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0],
-        [0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0],
-        [0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0],
-        [0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0],
-        [0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0],
-        [0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0],
-        [0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0],
-        [0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0],
+        [0, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 1, 1, 1, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0],
+        [0, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 1, 1, 1, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0],
+        [0, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 1, 1, 1, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0],
+        [0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0],
+        [0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0],
+        [0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0],
+        [0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0],
+        [0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0],
+        [0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 1, 1, 1, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0],
+        [0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 1, 1, 1, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0],
         [0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0],
         [0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0],
         [0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0],
         [0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0],
         [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
     ];
-    
-    init();
+	
+	// Run
+	init();
 
 })();
 

@@ -27,32 +27,36 @@ var outerdream = (function() {
     var tileSize = 16;
     var tileRows = 20;
     var tileColumns = 30;
+    var viewport = {
+        xpos: 0,
+        ypos: 0
+    };
     var player = {
         xpos: 0,
         ypos: 0
     };
     var fps = 30;
-	var spriteTilesSrc = 'images/spites.png';
+    var spriteTilesSrc = 'images/spites.png';
 
     var init = function() {
-		// Create main game canvas
+        // Create main game canvas
         canvas = document.getElementById('gameCanvas');
         context = this.canvas.getContext('2d');
         width = this.canvas.width;
         height = this.canvas.height;
-		spriteTiles = new Image();
-		spriteTiles.src = spriteTilesSrc;
-		
-		// Wait till image has finished loading
-		spriteTiles.onload = function() {
-			context.drawImage(spriteTiles, 0, 0); // Strange performance boost by doing this!?
-			draw();
-		}
-		
-		// Handle key events
-		document.onkeydown = handleKeyDown;
-		document.onkeyup = handleKeyUp;
-        
+        spriteTiles = new Image();
+        spriteTiles.src = spriteTilesSrc;
+
+        // Wait till image has finished loading
+        spriteTiles.onload = function() {
+            // Strange performance boost by doing this!?
+            context.drawImage(spriteTiles, 0, 0);
+            draw();
+        }
+
+        // Handle key events
+        document.onkeydown = handleKeyDown;
+        document.onkeyup = handleKeyUp;
     };
 
     var gameLoop = function() {
@@ -63,35 +67,35 @@ var outerdream = (function() {
     };
 
     var draw = function() {
-		console.time('drawing canvas');
-        // Create empty buffer to use
-        var buffer = context.createImageData(width, height);
+        console.time('drawing canvas');
+        // Initialise some variables for later use
         var colour = 0;
-        var pixelXPosition = 0;
-        var pixelYPosition = 0;
-		var tile = [];
+        var source = {};
 
         // Loop through each tile position
         for (var row = 0; row < tileRows; row++) {
             for (var col = 0; col < tileColumns; col++) {
                 // Choose tile based on tilemap value
-				if (tileMap[row][col] == 1) {
-                    colour = 255;
-					tile = [21, 33];
+                if (tileMap[row][col] == 1) {
+                   source.x = 34;
+                   source.y = 22;
                 } else {
-                    colour = 0;
-					tile = [0, 0]
+                    source.x = 0;
+                    source.y = 0;
                 }
-				// Draw tile to the context
-				context.drawImage(spriteTiles, tile[0], tile[1], 16, 16, col*16+player.xpos, row*16+player.ypos, 16, 16);
+                // Calculate the tile destination
+                var destX = col * tileSize + viewport.xpos;
+                var destY = row * tileSize + viewport.ypos;
+                // Draw a portion of a the tileSprite to the canvas
+                context.drawImage(spriteTiles, source.x, source.y, tileSize, tileSize, destX, destY, tileSize, tileSize);
             }
         }
 
-		console.timeEnd('drawing canvas');
+        console.timeEnd('drawing canvas');
     };
 
     var movePlayer = function(direction) {
-        switch(direction) {
+        switch (direction) {
             case 'left':
                 player.xpos--;
                 break;
@@ -104,37 +108,37 @@ var outerdream = (function() {
             case 'down':
                 player.ypos++;
                 break;
-        };
+        }
 
         // Flag that we are moving
         moving = true;
     };
-	
-	var handleKeyDown = function(event) {
-		// Detect what key was pressed (support wasd & arrows)
-		switch(event.keyCode) {
-			case 37:
-			case 65:
+
+    var handleKeyDown = function(event) {
+        // Detect what key was pressed (support wasd & arrows)
+        switch (event.keyCode) {
+            case 37:
+            case 65:
                 movePlayer('left');
-				break;
-			case 38:
-			case 87:
+                break;
+            case 38:
+            case 87:
                 movePlayer('up');
-				break;
-			case 39:
-			case 68:
-				movePlayer('right');
-				break
-			case 40:
-			case 83:
-				movePlayer('down');
-				break;
-		}
-	};
-	
-	var handleKeyUp = function(event) {
+                break;
+            case 39:
+            case 68:
+                movePlayer('right');
+                break;
+            case 40:
+            case 83:
+                movePlayer('down');
+                break;
+        }
+    };
+
+    var handleKeyUp = function(event) {
         moving = false;
-	};
+    };
 
     var tileMap = [
         [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
@@ -158,12 +162,7 @@ var outerdream = (function() {
         [0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0],
         [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
     ];
-	
-	// Run
-	init();
 
+    // Run
+    init();
 })();
-
-
-
-

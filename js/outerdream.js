@@ -27,6 +27,10 @@ var outerdream = (function() {
     var tileSize = 16;
     var tileRows = 20;
     var tileColumns = 30;
+    var player = {
+        xpos: 0,
+        ypos: 0
+    };
     var fps = 30;
 	var spriteTilesSrc = 'images/spites.png';
 
@@ -51,6 +55,13 @@ var outerdream = (function() {
         
     };
 
+    var gameLoop = function() {
+        if (moving) {
+            move();
+            draw();
+        }
+    };
+
     var draw = function() {
 		console.time('drawing canvas');
         // Create empty buffer to use
@@ -72,11 +83,31 @@ var outerdream = (function() {
 					tile = [0, 0]
                 }
 				// Draw tile to the context
-				context.drawImage(spriteTiles, tile[0], tile[1], 16, 16, col*16, row*16, 16, 16);
+				context.drawImage(spriteTiles, tile[0], tile[1], 16, 16, col*16+player.xpos, row*16+player.ypos, 16, 16);
             }
         }
 
 		console.timeEnd('drawing canvas');
+    };
+
+    var movePlayer = function(direction) {
+        switch(direction) {
+            case 'left':
+                player.xpos--;
+                break;
+            case 'right':
+                player.xpos++;
+                break;
+            case 'up':
+                player.ypos--;
+                break;
+            case 'down':
+                player.ypos++;
+                break;
+        };
+
+        // Flag that we are moving
+        moving = true;
     };
 	
 	var handleKeyDown = function(event) {
@@ -84,25 +115,25 @@ var outerdream = (function() {
 		switch(event.keyCode) {
 			case 37:
 			case 65:
-				console.log('left');
+                movePlayer('left');
 				break;
 			case 38:
 			case 87:
-				console.log('up');
+                movePlayer('up');
 				break;
 			case 39:
 			case 68:
-				console.log('right');
+				movePlayer('right');
 				break
 			case 40:
 			case 83:
-				console.log('down');
+				movePlayer('down');
 				break;
 		}
 	};
 	
 	var handleKeyUp = function(event) {
-
+        moving = false;
 	};
 
     var tileMap = [

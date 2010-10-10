@@ -26,3 +26,11 @@
  #gameCanvas {
     border: 1px solid #F00;
  }
+
+#debug {
+    font-family: monospace;
+    background-color: #000;
+    padding: 1em;
+    font-size: 0.9em;
+    color: #FFF;
+}

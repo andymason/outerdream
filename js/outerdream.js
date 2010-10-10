@@ -22,21 +22,24 @@
     along with Outer Dream.  If not, see <http://www.gnu.org/licenses/>.
 
  */
-
+ 
 var outerdream = (function() {
-    var tileSize = 16;
-    var tileRows = 20;
-    var tileColumns = 30;
+    // Initialise all the game variables
+    var tiles = {
+        size: 16
+    };
+    
     var viewport = {
-        xpos: 0,
-        ypos: 0
+        rows: 480 / tiles.size,
+        columns: 320 / tiles.size,
+        tileX: 0,
+        tileY: -10
     };
-    var player = {
-        xpos: 0,
-        ypos: 0
-    };
-    var fps = 30;
+
+    var targetFPS = 30;
+    var fps = 0;
     var spriteTilesSrc = 'images/spites.png';
+    var moving = false;
 
     var init = function() {
         // Create main game canvas
@@ -44,21 +47,28 @@ var outerdream = (function() {
         context = this.canvas.getContext('2d');
         width = this.canvas.width;
         height = this.canvas.height;
+        
+        tiles.rows = map.length;
+        tiles.columns = map[0].length;
+        
         spriteTiles = new Image();
         spriteTiles.src = spriteTilesSrc;
+        
 
         // Wait till image has finished loading
         spriteTiles.onload = function() {
             // Strange performance boost by doing this!?
             context.drawImage(spriteTiles, 0, 0);
             draw();
+            //setInterval(gameLoop, 30 / 1000);
         }
 
         // Handle key events
         document.onkeydown = handleKeyDown;
         document.onkeyup = handleKeyUp;
     };
-
+    
+    // The main game loop that controls movement and updating the canvas
     var gameLoop = function() {
         if (moving) {
             move();
@@ -67,51 +77,70 @@ var outerdream = (function() {
     };
 
     var draw = function() {
-        console.time('drawing canvas');
-        // Initialise some variables for later use
-        var colour = 0;
-        var source = {};
-
-        // Loop through each tile position
-        for (var row = 0; row < tileRows; row++) {
-            for (var col = 0; col < tileColumns; col++) {
-                // Choose tile based on tilemap value
-                if (tileMap[row][col] == 1) {
-                   source.x = 34;
-                   source.y = 22;
+        //console.time('drawing canvas');
+        // Loop through each viewport tile
+        for (var row = 0; row < viewport.rows; row++) {
+            for (var col = 0; col < viewport.columns; col++) {
+                // Calculate viewport position on tile map
+                var x = row + viewport.tileX;
+                var y = col + viewport.tileY;
+                
+                // Check if viewport is outside tile map
+                if (x < 0 || x > tiles.columns || y < 0 || y > tiles.rows) {
+                    tile = 0;
                 } else {
-                    source.x = 0;
-                    source.y = 0;
+                    tile = map[y][x];
                 }
                 // Calculate the tile destination
-                var destX = col * tileSize + viewport.xpos;
-                var destY = row * tileSize + viewport.ypos;
-                // Draw a portion of a the tileSprite to the canvas
-                context.drawImage(spriteTiles, source.x, source.y, tileSize, tileSize, destX, destY, tileSize, tileSize);
+                //var destX = col * tileSize + player.xpos;
+                // destY = row * tileSize + player.ypos;
+                
+                drawTile(row, col, tile);
             }
         }
 
-        console.timeEnd('drawing canvas');
-    };
+        // output debug information
+        //debug();
 
-    var movePlayer = function(direction) {
-        switch (direction) {
-            case 'left':
-                player.xpos--;
-                break;
-            case 'right':
-                player.xpos++;
-                break;
-            case 'up':
-                player.ypos--;
-                break;
-            case 'down':
-                player.ypos++;
-                break;
+        //console.timeEnd('drawing canvas');
+    };
+    
+    var drawTile = function(row, col, tile) {
+        var tileSprite = {};
+        if (tile === 0) {
+            tileSprite.x = 40,
+            tileSprite.y = 23
+        } else {
+            tileSprite.x = 0,
+            tileSprite.y = 0
         }
 
-        // Flag that we are moving
-        moving = true;
+        var destX = row * tiles.size;
+        var destY = col * tiles.size;
+        
+        // Draw a portion of a the tileSprite to the canvas
+        context.drawImage(spriteTiles, tileSprite.x, tileSprite.y, tiles.size, tiles.size, destX, destY, tiles.size, tiles.size);
+    }
+    
+    
+    // Move the position of the player
+    var move = function() {
+        if (moving) {
+            switch (player.direction) {
+                case 'left':
+                    viewport.xpos--;
+                    break;
+                case 'right':
+                    viewport.xpos++;
+                    break;
+                case 'up':
+                    viewport.ypos--;
+                    break;
+                case 'down':
+                    viewport.ypos++;
+                    break;
+            }
+        }
     };
 
     var handleKeyDown = function(event) {
@@ -119,50 +148,89 @@ var outerdream = (function() {
         switch (event.keyCode) {
             case 37:
             case 65:
-                movePlayer('left');
+                player.direction = 'left';
+                moving = true;
                 break;
             case 38:
             case 87:
-                movePlayer('up');
+                player.direction = 'up';
+                moving = true;
                 break;
             case 39:
             case 68:
-                movePlayer('right');
+                player.direction = 'right';
+                moving = true;
                 break;
             case 40:
             case 83:
-                movePlayer('down');
+                player.direction = 'down';
+                moving = true;
                 break;
         }
     };
-
+    
     var handleKeyUp = function(event) {
+        // Need to match keyup keyCode to currently moving direction
         moving = false;
     };
 
-    var tileMap = [
-        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-        [0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0],
-        [0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0],
-        [0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0],
-        [0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0],
-        [0, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 1, 1, 1, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0],
-        [0, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 1, 1, 1, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0],
-        [0, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 1, 1, 1, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0],
-        [0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0],
-        [0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0],
-        [0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0],
-        [0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0],
-        [0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0],
-        [0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 1, 1, 1, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0],
-        [0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 1, 1, 1, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0],
-        [0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0],
-        [0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0],
-        [0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0],
-        [0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0],
-        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+    
+    
+    // Output debug information to the screen
+    var debug = function() {
+        // Background box
+        context.fillStyle = 'rgba(0, 0, 0, 0.7)';
+        context.fillRect(0, 0, 150, 75);
+        context.fillStyle = 'rgb(255, 255, 255)';
+        // Set font and text
+        context.font = '9pt monospace';
+        context.fillText('DEBUG CONSOLE', 10, 15);
+        context.fillText('FPS = ' + fps , 10, 25);
+        context.fillText('Viewport xpos = ' + viewport.xpos , 10, 35);
+        context.fillText('Viewport ypos = ' + viewport.ypos , 10, 45);
+        context.fillText('Player xpos = ' + player.xpos , 10, 55);
+        context.fillText('Player ypos = ' + player.ypos , 10, 65);
+        context.fill();
+    }
+    
+    var map = [
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0],
+        [0, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0],
+        [0, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0],
+        [0, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0],
+        [0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0],
+        [0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0],
+        [0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0],
+        [0, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0],
+        [0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0],
+        [0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0],
+        [0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0],
+        [0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0],
+        [0, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0],
+        [0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0],
+        [0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0],
+        [0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0],
+        [0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0],
+        [0, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0],
+        [0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0],
+        [0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0],
+        [0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0],
+        [0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0],
+        [0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0],
+        [0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0],
+        [0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0],
+        [0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0],
+        [0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0],
+        [0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0],
+        [0, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0],
+        [0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0],
+        [0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0],
+        [0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
     ];
 
     // Run
     init();
+    
 })();

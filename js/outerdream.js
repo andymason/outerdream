@@ -36,17 +36,19 @@ var outerdream = (function() {
     };
 
     var viewport = {
-        rows: width / tiles.size,
-        columns: height / tiles.size,
-        tileX: -3,
-        tileY: -10
+        rows: height / tiles.size,
+        columns: width / tiles.size,
+        tileX: -2,
+        tileY: -3
     };
 
     var player = {
         direction: 'down',
-        tileX: Math.floor((viewport.columns / 2) * tiles.size),
-        tileY: Math.floor((viewport.rows / 2) * tiles.size)
-    };
+        tileX: Math.floor(viewport.columns / 2),
+        tileY: Math.floor(viewport.rows / 2),
+        posX: Math.floor((viewport.columns / 2) * tiles.size),
+        posY: Math.floor((viewport.rows / 2) * tiles.size)
+    }
 
     var targetFPS = 30;
     var fps = 0;
@@ -85,6 +87,10 @@ var outerdream = (function() {
         drawBackground();
         drawCharacter();
     };
+    
+    var scripts = {
+        'hello': 'Hello World!'
+    };
 
     var drawCharacter = function() {
         var direction = playerSprites[player.direction];
@@ -94,8 +100,8 @@ var outerdream = (function() {
             direction[1],
             tiles.size,
             tiles.size,
-            player.tileY,
-            player.tileX,
+            player.posX,
+            player.posY,
             tiles.size,
             tiles.size
         );
@@ -107,8 +113,8 @@ var outerdream = (function() {
         for (var row = 0; row < viewport.rows; row++) {
             for (var col = 0; col < viewport.columns; col++) {
                 // Calculate viewport position on tile map
-                var x = row + viewport.tileX;
-                var y = col + viewport.tileY;
+                var x = col + viewport.tileX;
+                var y =  row + viewport.tileY;
 
                 // Check if viewport is outside tile map
                 if (x < 0 || x >= tiles.columns || y < 0 || y >= tiles.rows) {
@@ -123,12 +129,12 @@ var outerdream = (function() {
 
                 // Render background
                 var spritePos = tileBackgrounds[tile.background];
-                drawTile(spriteTiles, row, col, spritePos);
+                drawTile(spriteTiles, col, row, spritePos);
 
                 // Check if the tile has a forground object and render
                 if (tile.foreground) {
                     spritePos = tileForegrounds[tile.foreground];
-                    drawTile(spriteTiles, row, col, spritePos);
+                    drawTile(spriteTiles, col, row, spritePos);
                 }
             }
         }
@@ -177,19 +183,22 @@ var outerdream = (function() {
 
     // Move the position of the player
     var move = function(direction) {
+        // Rough collision detection code
+        // tiles around players position
+        
         // Move map based on key input
         switch (direction) {
             case 'left':
-                viewport.tileX--;
+                isCollision(-1, 0);
                 break;
             case 'right':
-                viewport.tileX++;
+                isCollision(1, 0);
                 break;
             case 'up':
-                viewport.tileY--;
+                isCollision(0, -1);
                 break;
             case 'down':
-                viewport.tileY++;
+                isCollision(0, 1);
                 break;
         }
         // Update the players direction
@@ -197,6 +206,30 @@ var outerdream = (function() {
         // run the game loop
         gameLoop();
     };
+    
+    var isCollision = function(x, y) {
+        // Get next tile based on user movement
+        var mapX = (player.tileX + viewport.tileX) + x;
+        var mapY = (player.tileY + viewport.tileY) + y;
+        var nextTile = map[mapY][mapX];
+        
+        // Check for scripted event       
+        if (nextTile.script !== undefined) {
+            alert(scripts[nextTile.script]);
+        }
+        
+        
+        // Check for collision
+        if (nextTile == 'undefinded' || nextTile.collision == true) {
+            // We hit something
+            return
+        }
+        
+        // We can move so update viewport position
+        viewport.tileX += x;
+        viewport.tileY += y;
+        
+    }
 
     var handleKeyDown = function(event) {
         // Detect what key was pressed (support wasd & arrows)

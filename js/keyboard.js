@@ -1,5 +1,5 @@
 /*
-    Title:      Outer Dream CSS
+    Title:      Outer Dream. Keyboard
     Author:     Andrew Mason
     Contact:    a.w.mason@gmail.com
     Source:     http://github.com/andymason/outerdream
@@ -9,7 +9,9 @@
         * Add progressive enhancement checks
 
     Copyright:
-    This program is free software: you can redistribute it and/or modify
+    This file is part of Outer Dream.
+
+    Outer Dream is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
@@ -23,15 +25,3 @@
     along with Outer Dream.  If not, see <http://www.gnu.org/licenses/>.
 
  */
- 
- #gameCanvas {
-    border: 1px solid #F00;
- }
-
-#debug {
-    font-family: monospace;
-    background-color: #000;
-    padding: 1em;
-    font-size: 0.9em;
-    color: #FFF;
-}
